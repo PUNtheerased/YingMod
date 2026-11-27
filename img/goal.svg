@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" font-family="Kanit, Tahoma, sans-serif">
+  <defs>
+    <linearGradient id="ship" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e0fbfc"/>
+      <stop offset="1" stop-color="#3a86ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="240" height="180" rx="16" fill="#0b1033"/>
+  <!-- enemies -->
+  <ellipse cx="40" cy="34" rx="18" ry="10" fill="#ff4d6d"/>
+  <path d="M33 30 A7 7 0 0 1 47 30 Z" fill="#ffd6de"/>
+  <path d="M90 18 L104 32 L90 46 L76 32 Z" fill="#ffb703"/>
+  <path d="M140 50 L154 20 L140 30 L126 20 Z" fill="#c77dff"/>
+  <path d="M200 10 L222 22 L222 46 L200 58 L178 46 L178 22 Z" fill="#4cc9f0"/>
+  <circle cx="200" cy="34" r="9" fill="#05061a"/>
+  <text x="70" y="70" fill="#ff4d6d" font-size="12">&#xe22;&#xe34;&#xe07;&#xe28;&#xe31;&#xe15;&#xe23;&#xe39; &#xb7; &#xe2b;&#xe25;&#xe1a;&#xe01;&#xe23;&#xe30;&#xe2a;&#xe38;&#xe19;</text>
+  <!-- bullets -->
+  <rect x="47" y="96" width="6" height="16" rx="3" fill="#7df9ff"/>
+  <circle cx="190" cy="92" r="5" fill="#ff5ca8"/>
+  <!-- ship -->
+  <path d="M50 118 L56 132 L68 142 L67 146 L56 142 L54 150 L46 150 L44 142 L33 146 L32 142 L44 132 Z" fill="url(#ship)" stroke="#3df5ff" stroke-width="1.5"/>
+  <!-- power-up -->
+  <circle cx="120" cy="120" r="16" fill="rgba(61,255,138,.25)" stroke="#3dff8a" stroke-width="3"/>
+  <text x="120" y="126" fill="#eafff2" font-size="16" font-weight="bold" text-anchor="middle">S</text>
+  <text x="120" y="160" fill="#3dff8a" font-size="11" text-anchor="middle">&#xe22;&#xe34;&#xe07;&#xe01;&#xe23;&#xe30;&#xe08;&#xe32;&#xe22; 3 &#xe17;&#xe32;&#xe07;</text>
+  <!-- hearts -->
+  <g fill="#ff3b8d">
+    <path d="M178 112 C178 104 168 104 168 112 C168 118 178 122 178 128 C178 122 188 118 188 112 C188 104 178 104 178 112 Z"/>
+    <path d="M200 112 C200 104 190 104 190 112 C190 118 200 122 200 128 C200 122 210 118 210 112 C210 104 200 104 200 112 Z"/>
+    <path d="M222 112 C222 104 212 104 212 112 C212 118 222 122 222 128 C222 122 232 118 232 112 C232 104 222 104 222 112 Z"/>
+  </g>
+  <text x="200" y="146" fill="#ff3b8d" font-size="12" text-anchor="middle">3 &#xe0a;&#xe35;&#xe27;&#xe34;&#xe15;</text>
+</svg>

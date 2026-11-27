@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" font-family="Kanit, Tahoma, sans-serif">
+  <rect width="240" height="180" rx="16" fill="#0b1033"/>
+  <g fill="#1b2350" stroke="#3df5ff" stroke-width="2">
+    <rect x="16" y="30" width="34" height="34" rx="6"/>
+    <rect x="56" y="30" width="34" height="34" rx="6"/>
+    <rect x="16" y="76" width="34" height="34" rx="6"/>
+    <rect x="56" y="76" width="34" height="34" rx="6"/>
+    <rect x="16" y="124" width="140" height="30" rx="6" stroke="#ff3b8d"/>
+  </g>
+  <g fill="#e0fbfc" font-size="18" font-weight="bold" text-anchor="middle">
+    <text x="33" y="54">A</text>
+    <text x="73" y="54">D</text>
+    <text x="33" y="100">&#x2190;</text>
+    <text x="73" y="100">&#x2192;</text>
+  </g>
+  <text x="86" y="144" fill="#ff3b8d" font-size="14" font-weight="bold" text-anchor="middle">SPACE = &#xe22;&#xe34;&#xe07;</text>
+  <text x="100" y="74" fill="#3df5ff" font-size="12">&#xe02;&#xe22;&#xe31;&#xe1a;</text>
+  <!-- mouse -->
+  <rect x="176" y="40" width="44" height="70" rx="22" fill="#1b2350" stroke="#3df5ff" stroke-width="2"/>
+  <line x1="198" y1="40" x2="198" y2="68" stroke="#3df5ff" stroke-width="2"/>
+  <path d="M178 66 L178 62 A20 20 0 0 1 198 42 L198 68 Z" fill="#ff3b8d" opacity=".7"/>
+  <text x="198" y="132" fill="#e0fbfc" font-size="11" text-anchor="middle">&#xe02;&#xe22;&#xe31;&#xe1a;&#xe40;&#xe21;&#xe32;&#xe2a;&#xe4c;</text>
+  <text x="198" y="148" fill="#ff3b8d" font-size="11" text-anchor="middle">&#xe04;&#xe25;&#xe34;&#xe01;&#xe04;&#xe49;&#xe32;&#xe07; = &#xe22;&#xe34;&#xe07;</text>
+</svg>

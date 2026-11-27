@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Space Finger Gun — เกมยิงยานอวกาศด้วยท่ามือ</title>
+  <meta name="description" content="เกม Space Shooter ควบคุมด้วยท่ามือทำปืนผ่านเว็บแคม ใช้ Google MediaPipe Hand Landmarker" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&family=Orbitron:wght@600;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="game"></canvas>
+  <video id="webcam" playsinline muted></video>
+
+  <div id="topbar" class="hidden">
+    <div class="top-buttons">
+      <button id="btnPause" class="icon-btn" title="หยุดชั่วคราว (P)">⏸</button>
+      <button id="btnHelp" class="icon-btn" title="วิธีเล่น">?</button>
+      <button id="btnMute" class="icon-btn" title="เปิด/ปิดเสียง (M)">🔊</button>
+    </div>
+    <canvas id="preview" width="320" height="240"></canvas>
+  </div>
+
+  <div id="hint" class="hidden">
+    <img src="img/move.svg" alt="" />
+    <span>ขยับมือ ซ้าย–ขวา</span>
+    <img src="img/fire.svg" alt="" />
+    <span>กดนิ้วโป้งลง = ยิง</span>
+  </div>
+
+  <!-- Main menu -->
+  <section id="menu" class="overlay">
+    <div class="panel menu-panel">
+      <h1 class="title">SPACE<span>FINGER GUN</span></h1>
+      <p class="subtitle">เกมยิงยานอวกาศ ควบคุมด้วย “ท่ามือทำปืน” ผ่านกล้องเว็บแคม</p>
+      <img class="menu-art" src="img/fire.svg" alt="ท่ามือทำปืน กดนิ้วโป้งลงเพื่อยิง" />
+      <div class="buttons">
+        <button id="menuStart" class="btn primary">▶ เริ่มเกม</button>
+        <button id="menuHowto" class="btn">📖 วิธีเล่น</button>
+      </div>
+      <p id="status" class="status">⏳ กำลังโหลดโมเดล Hand Landmarker...</p>
+      <p class="high">คะแนนสูงสุด: <b id="menuHigh">0</b></p>
+      <p class="credit">Hand tracking โดย Google MediaPipe Tasks Vision (Hand Landmarker) · รันออนไลน์ในเบราว์เซอร์</p>
+    </div>
+  </section>
+
+  <!-- How to play -->
+  <section id="howto" class="overlay hidden">
+    <div class="panel howto-panel">
+      <h2>📖 วิธีเล่น</h2>
+      <div class="cards">
+        <article class="card">
+          <img src="img/ready.svg" alt="นั่งห่างกล้อง 50-80 ซม." />
+          <h3>1. เตรียมตัว</h3>
+          <p>นั่งห่างกล้อง <b>50–80 ซม.</b> ในที่มีแสงสว่างพอ แล้วยกมือขึ้น 1 ข้าง หันฝ่ามือเข้าหากล้อง</p>
+        </article>
+        <article class="card">
+          <img src="img/gun-pose.svg" alt="ท่ามือทำปืน" />
+          <h3>2. ทำท่าปืน 👉</h3>
+          <p><b>ชูนิ้วชี้ขึ้น</b> และ <b>ตั้งนิ้วโป้งขึ้น</b> นิ้วที่เหลือกำไว้ เหมือนทำมือเป็นปืน</p>
+        </article>
+        <article class="card">
+          <img src="img/move.svg" alt="เลื่อนมือซ้ายขวา ยานเคลื่อนตาม" />
+          <h3>3. บังคับยาน</h3>
+          <p>เลื่อนมือไป<b>ทางซ้าย</b> ยานไปซ้าย เลื่อนไป<b>ทางขวา</b> ยานไปขวา ไม่ต้องยื่นมือจนสุดขอบกล้อง</p>
+        </article>
+        <article class="card">
+          <img src="img/fire.svg" alt="กดนิ้วโป้งลงเพื่อยิง" />
+          <h3>4. ยิง! 💥</h3>
+          <p><b>กดนิ้วโป้งลง</b>แตะนิ้วชี้ = ยิง 1 นัด แล้วยกนิ้วโป้งขึ้นเพื่อยิงนัดต่อไป ถ้ากดค้างไว้จะยิงต่อเนื่องช้า ๆ</p>
+        </article>
+        <article class="card">
+          <img src="img/goal.svg" alt="หลบศัตรู เก็บไอเทม มี 3 ชีวิต" />
+          <h3>5. เป้าหมาย</h3>
+          <p>ยิงศัตรูเก็บคะแนน หลบศัตรูและกระสุน เก็บไอเทม <b>S</b> เพื่อยิงกระจาย 3 ทาง มีทั้งหมด <b>3 ชีวิต</b></p>
+        </article>
+        <article class="card">
+          <img src="img/keyboard.svg" alt="ปุ่มคีย์บอร์ดและเมาส์" />
+          <h3>6. ไม่มีกล้อง?</h3>
+          <p>ใช้ <b>A/D</b> หรือ <b>← →</b> เพื่อขยับ และ <b>Space</b> เพื่อยิง หรือใช้เมาส์ขยับและคลิกยิง</p>
+        </article>
+      </div>
+
+      <div class="live">
+        <div class="live-left">
+          <canvas id="livePreview" width="320" height="240"></canvas>
+          <button id="btnCamera" class="btn">📷 เปิดกล้องเพื่อลองท่ามือ</button>
+        </div>
+        <div class="live-right">
+          <h3>ลองท่ามือก่อนเล่น</h3>
+          <ul class="lamps">
+            <li id="lampHand">✋ เจอมือ</li>
+            <li id="lampGun">👉 ท่าปืนถูกต้อง</li>
+            <li id="lampFire">💥 ยิง!</li>
+          </ul>
+          <div class="meter">
+            <div class="meter-label"><span>นิ้วโป้งลง</span><span>นิ้วโป้งขึ้น</span></div>
+            <div class="meter-bar">
+              <div id="meterDown" class="mark down" title="จุดยิง"></div>
+              <div id="meterUp" class="mark up" title="จุดง้าง"></div>
+              <div id="meterVal" class="needle"></div>
+            </div>
+          </div>
+          <div class="track">
+            <div class="track-label">ตำแหน่งยาน (เลื่อนมือซ้าย–ขวา)</div>
+            <div class="track-bar"><div id="trackShip" class="track-ship">▲</div></div>
+          </div>
+          <p class="shots">ยิงไปแล้ว: <b id="shotCount">0</b> นัด</p>
+          <button id="btnCalibrate" class="btn small">🎯 ปรับเทียบนิ้วโป้ง</button>
+          <p id="calibMsg" class="calib-msg">ถ้ายิงยากหรือยิงเอง ลองกดปรับเทียบให้เข้ากับมือของคุณ</p>
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button id="howtoStart" class="btn primary">▶ เริ่มเกม</button>
+        <button id="howtoBack" class="btn">กลับ</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pause -->
+  <section id="pause" class="overlay hidden">
+    <div class="panel small-panel">
+      <h2>⏸ หยุดชั่วคราว</h2>
+      <div class="buttons column">
+        <button id="pauseResume" class="btn primary">▶ เล่นต่อ</button>
+        <button id="pauseHowto" class="btn">📖 วิธีเล่น</button>
+        <button id="pauseMenu" class="btn">🏠 เมนูหลัก</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Game over -->
+  <section id="gameover" class="overlay hidden">
+    <div class="panel small-panel">
+      <h2 class="go-title">GAME OVER</h2>
+      <p class="go-score">คะแนน <b id="goScore">0</b></p>
+      <p class="go-high">คะแนนสูงสุด <b id="goHigh">0</b></p>
+      <p id="goNew" class="go-new hidden">🏆 สถิติใหม่!</p>
+      <div class="buttons column">
+        <button id="goRetry" class="btn primary">🔁 เล่นอีกครั้ง</button>
+        <button id="goMenu" class="btn">🏠 เมนูหลัก</button>
+      </div>
+    </div>
+  </section>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

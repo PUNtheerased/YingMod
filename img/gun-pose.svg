@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" font-family="Kanit, Tahoma, sans-serif">
+  <rect width="240" height="180" rx="16" fill="#0b1033"/>
+  <g fill="#fff" opacity=".5">
+    <circle cx="20" cy="20" r="1.2"/><circle cx="210" cy="30" r="1"/><circle cx="40" cy="150" r="1"/><circle cx="220" cy="140" r="1.4"/>
+  </g>
+  <g stroke="#6b3f22" stroke-width="3" stroke-linejoin="round" fill="#f6c7a1">
+    <rect x="108" y="152" width="44" height="40" rx="8"/>
+    <rect x="98" y="100" width="64" height="66" rx="18"/>
+    <rect x="104" y="46" width="22" height="74" rx="11"/>
+    <rect x="124" y="106" width="42" height="16" rx="8"/>
+    <rect x="124" y="123" width="42" height="16" rx="8"/>
+    <rect x="124" y="140" width="38" height="16" rx="8"/>
+    <rect x="80" y="74" width="20" height="54" rx="10" transform="rotate(-16 90 122)"/>
+  </g>
+  <rect x="109" y="50" width="12" height="10" rx="5" fill="#fde3cf"/>
+  <!-- labels -->
+  <g stroke="#3df5ff" stroke-width="2" fill="none">
+    <path d="M128 50 L170 34"/>
+    <path d="M78 80 L44 70"/>
+  </g>
+  <text x="172" y="30" fill="#3df5ff" font-size="12">&#xe19;&#xe34;&#xe49;&#xe27;&#xe0a;&#xe35;&#xe49;&#xe0a;&#xe35;&#xe49;&#xe02;&#xe36;&#xe49;&#xe19;</text>
+  <text x="8" y="64" fill="#ffd166" font-size="12">&#xe19;&#xe34;&#xe49;&#xe27;&#xe42;&#xe1b;&#xe49;&#xe07;&#xe15;&#xe31;&#xe49;&#xe07;&#xe02;&#xe36;&#xe49;&#xe19;</text>
+  <text x="172" y="120" fill="#e0fbfc" font-size="11" opacity=".8">&#xe19;&#xe34;&#xe49;&#xe27;&#xe2d;&#xe37;&#xe48;&#xe19;&#xe01;&#xe33;&#xe44;&#xe27;&#xe49;</text>
+  <!-- check -->
+  <circle cx="204" cy="70" r="16" fill="#3dff8a"/>
+  <path d="M196 70 L202 76 L213 63" stroke="#0b1033" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
