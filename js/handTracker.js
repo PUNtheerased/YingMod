@@ -97,8 +97,13 @@ export class HandTracker {
     }
   }
 
-  async startCamera() {
-    if (this.cameraOn) return;
+  startCamera() {
+    if (this.cameraOn) return Promise.resolve();
+    this.cameraPromise ??= this.openCamera().finally(() => (this.cameraPromise = null));
+    return this.cameraPromise;
+  }
+
+  async openCamera() {
     if (!navigator.mediaDevices?.getUserMedia) {
       throw new Error("เบราว์เซอร์นี้ไม่รองรับกล้อง (ต้องเปิดผ่าน https หรือ localhost)");
     }

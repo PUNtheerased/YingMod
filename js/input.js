@@ -9,6 +9,8 @@ const CALIB_KEY = "ss_thumb_calib_v2";
 const ZONE_MIN = 0.15;
 const ZONE_MAX = 0.85;
 const HAND_LOST_MS = 500;
+const OPEN_MIN = 0.4;
+const OPEN_DECAY = 0.05;
 const PALM = [0, 5, 9, 13, 17];
 
 /** One Euro filter: smooth when the hand is still, low lag when it moves fast. */
@@ -64,8 +66,11 @@ export class FingerGunInput {
     this.dFresh = false;
     this.gunPose = false;
     this.triggerDown = false;
-    this.thresholdDown = 0.45;
-    this.thresholdUp = 0.62;
+    this.thresholdDown = 0.33;
+    this.thresholdUp = 0.42;
+    this.calibrated = false;
+    this.openLevel = 0;
+    this.lastDetect = 0;
     this.xFilter = new OneEuro(1.2, 6);
     this.repeatMs = 400;
     this.lastFire = 0;
@@ -166,6 +171,7 @@ export class FingerGunInput {
     this.gunPose = indexExtended && othersCurled;
 
     if (this.calibrating) return;
+    if (!this.calibrated) this.adaptThresholds(now);
     if (!this.triggerDown && this.d < this.thresholdDown) {
       this.triggerDown = true;
       this.fire(now);
@@ -196,12 +202,36 @@ export class FingerGunInput {
     }
   }
 
+  /**
+   * How far a thumb opens differs per person and per hand angle, so without a
+   * calibration the trigger points follow this player's own "thumb up" distance.
+   * The open level rises fairly fast (one noisy frame can't jump it) and decays
+   * slowly so holding the trigger down doesn't drag the thresholds with it.
+   */
+  adaptThresholds(now) {
+    const dt = Math.min(0.5, Math.max(0, (now - this.lastDetect) / 1000));
+    this.lastDetect = now;
+    if (this.openLevel === 0) this.openLevel = Math.max(this.d, OPEN_MIN);
+    else if (this.d > this.openLevel) this.openLevel += (this.d - this.openLevel) * 0.3;
+    else this.openLevel += (this.d - this.openLevel) * Math.min(1, OPEN_DECAY * dt);
+    this.openLevel = clamp(this.openLevel, OPEN_MIN, 1.4);
+    this.thresholdDown = this.openLevel * 0.6;
+    this.thresholdUp = this.openLevel * 0.78;
+  }
+
+  resetCalibration() {
+    this.calibrated = false;
+    this.openLevel = 0;
+    localStorage.removeItem(CALIB_KEY);
+  }
+
   loadCalibration() {
     try {
       const c = JSON.parse(localStorage.getItem(CALIB_KEY));
       if (c && c.down < c.up) {
         this.thresholdDown = c.down;
         this.thresholdUp = c.up;
+        this.calibrated = true;
       }
     } catch {
       /* ignore corrupt storage */
@@ -247,6 +277,7 @@ export class FingerGunInput {
       const gap = (mu - md) * 0.18;
       this.thresholdDown = mid - gap;
       this.thresholdUp = mid + gap;
+      this.calibrated = true;
       localStorage.setItem(CALIB_KEY, JSON.stringify({ down: this.thresholdDown, up: this.thresholdUp }));
       return { up: mu, down: md };
     } finally {

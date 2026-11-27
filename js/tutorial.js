@@ -30,6 +30,10 @@ export class Tutorial {
     });
 
     this.el.btnCalibrate.addEventListener("click", () => this.calibrate());
+    $("btnAutoCalib").addEventListener("click", () => {
+      this.input.resetCalibration();
+      this.el.calibMsg.textContent = "✅ กลับเป็นโหมดอัตโนมัติแล้ว ยกนิ้วโป้งขึ้นสักครู่ให้เกมจำระยะ";
+    });
   }
 
   async calibrate() {

@@ -68,6 +68,8 @@ async function ensureCamera() {
   try {
     await tracker.startCamera();
     $("btnCamera").classList.add("hidden");
+    $("calibMsg").textContent = "";
+    if (tracker.ready) setStatus("✅ กล้องพร้อมแล้ว");
     return true;
   } catch (err) {
     console.error(err);
