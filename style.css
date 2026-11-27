@@ -101,8 +101,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(3, 4, 18, 0.55);
-  backdrop-filter: blur(3px);
+  background: rgba(3, 4, 18, 0.7);
   z-index: 10;
   padding: 16px;
 }

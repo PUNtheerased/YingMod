@@ -5,10 +5,46 @@ const median = (arr) => {
   return s[Math.floor(s.length / 2)];
 };
 
-const CALIB_KEY = "ss_thumb_calib";
+const CALIB_KEY = "ss_thumb_calib_v2";
 const ZONE_MIN = 0.15;
 const ZONE_MAX = 0.85;
-const HAND_LOST_MS = 300;
+const HAND_LOST_MS = 500;
+const PALM = [0, 5, 9, 13, 17];
+
+/** One Euro filter: smooth when the hand is still, low lag when it moves fast. */
+class OneEuro {
+  constructor(minCutoff, beta, dCutoff = 1) {
+    this.minCutoff = minCutoff;
+    this.beta = beta;
+    this.dCutoff = dCutoff;
+    this.reset();
+  }
+
+  reset() {
+    this.x = null;
+    this.dx = 0;
+    this.t = 0;
+  }
+
+  static alpha(cutoff, dt) {
+    const tau = 1 / (2 * Math.PI * cutoff);
+    return 1 / (1 + tau / dt);
+  }
+
+  filter(x, tMs) {
+    if (this.x === null) {
+      this.x = x;
+      this.t = tMs;
+      return x;
+    }
+    const dt = Math.max(1e-3, (tMs - this.t) / 1000);
+    this.t = tMs;
+    this.dx += OneEuro.alpha(this.dCutoff, dt) * ((x - this.x) / dt - this.dx);
+    const cutoff = this.minCutoff + this.beta * Math.abs(this.dx);
+    this.x += OneEuro.alpha(cutoff, dt) * (x - this.x);
+    return this.x;
+  }
+}
 
 /**
  * Finger-gun controls:
@@ -29,7 +65,8 @@ export class FingerGunInput {
     this.gunPose = false;
     this.triggerDown = false;
     this.thresholdDown = 0.45;
-    this.thresholdUp = 0.65;
+    this.thresholdUp = 0.62;
+    this.xFilter = new OneEuro(1.2, 6);
     this.repeatMs = 400;
     this.lastFire = 0;
     this.pending = 0;
@@ -98,26 +135,34 @@ export class FingerGunInput {
     this.pending = 0;
   }
 
-  /** Called with fresh landmarks (or null) after each detection. */
-  onHand(lms, now, aspect) {
+  /**
+   * Called after each detection. `world` (metric 3D landmarks) makes the thumb
+   * measurement independent of hand rotation and distance; 2D is the fallback.
+   */
+  onHand(lms, world, now, aspect) {
     if (!lms) return;
-    const first = !this.handPresent;
+    if (!this.handPresent) this.xFilter.reset();
     this.lastSeen = now;
     this.handPresent = true;
     this.source = "hand";
 
-    const raw = 1 - (lms[5].x + lms[0].x) / 2;
+    let cx = 0;
+    for (const i of PALM) cx += lms[i].x;
+    const raw = 1 - cx / PALM.length;
     const mapped = clamp((raw - ZONE_MIN) / (ZONE_MAX - ZONE_MIN), 0, 1);
-    this.handX = first ? mapped : this.handX + (mapped - this.handX) * 0.55;
+    this.handX = clamp(this.xFilter.filter(mapped, now), 0, 1);
 
-    const dist = (a, b) => Math.hypot((a.x - b.x) * aspect, a.y - b.y);
-    const size = dist(lms[0], lms[9]) || 1e-3;
-    this.d = dist(lms[4], lms[5]) / size;
+    const pts = world ?? lms;
+    const dist = world
+      ? (a, b) => Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z)
+      : (a, b) => Math.hypot((a.x - b.x) * aspect, a.y - b.y);
+    const size = dist(pts[0], pts[9]) || 1e-3;
+    this.d = dist(pts[4], pts[5]) / size;
     this.dFresh = true;
 
-    const indexTip = dist(lms[8], lms[0]);
-    const indexExtended = indexTip > dist(lms[6], lms[0]) * 1.05;
-    const othersCurled = Math.max(dist(lms[12], lms[0]), dist(lms[16], lms[0])) < indexTip * 0.8;
+    const indexTip = dist(pts[8], pts[0]);
+    const indexExtended = indexTip > dist(pts[6], pts[0]) * 1.05;
+    const othersCurled = Math.max(dist(pts[12], pts[0]), dist(pts[16], pts[0])) < indexTip * 0.8;
     this.gunPose = indexExtended && othersCurled;
 
     if (this.calibrating) return;

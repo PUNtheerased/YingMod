@@ -55,7 +55,9 @@ resize();
 setStatus("⏳ กำลังโหลดโมเดล Hand Landmarker จาก Google...");
 tracker
   .init()
-  .then(() => setStatus(`✅ โมเดลพร้อมแล้ว (${tracker.delegate}) — กดเริ่มเกมแล้วอนุญาตให้ใช้กล้อง`))
+  .then(() =>
+    setStatus(`✅ โมเดลพร้อมแล้ว (${tracker.delegate} · ${tracker.mode}) — กดเริ่มเกมแล้วอนุญาตให้ใช้กล้อง`)
+  )
   .catch((err) => {
     console.error(err);
     setStatus("⚠️ โหลดโมเดลไม่สำเร็จ (ตรวจสอบอินเทอร์เน็ต) — ยังเล่นด้วยคีย์บอร์ด/เมาส์ได้", true);
@@ -190,8 +192,8 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
 
-  const result = tracker.detect(now);
-  if (result) input.onHand(result.landmarks, now, tracker.aspect);
+  const result = tracker.pump(now);
+  if (result) input.onHand(result.landmarks, result.world, now, tracker.aspect);
   input.tick(now, dt);
 
   game.update(dt, input);
