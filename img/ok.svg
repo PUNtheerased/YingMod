@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" font-family="Orbitron, sans-serif">
+  <rect width="240" height="180" rx="16" fill="#101831"/>
+  <g stroke="#6b3f22" stroke-width="3" stroke-linejoin="round" fill="#f6c7a1">
+    <rect x="104" y="156" width="46" height="34" rx="8"/>
+    <rect x="94" y="102" width="68" height="64" rx="20"/>
+    <rect x="114" y="38" width="16" height="72" rx="8"/>
+    <rect x="132" y="42" width="16" height="68" rx="8" transform="rotate(6 140 110)"/>
+    <rect x="148" y="58" width="15" height="56" rx="7.5" transform="rotate(14 155 112)"/>
+    <path d="M100 108 C 70 104, 64 70, 88 62 C 104 58, 110 74, 104 86" fill="none" stroke-width="14" stroke="#6b3f22" stroke-linecap="round"/>
+    <path d="M100 108 C 70 104, 64 70, 88 62 C 104 58, 110 74, 104 86" fill="none" stroke-width="9" stroke="#f6c7a1" stroke-linecap="round"/>
+  </g>
+  <circle cx="88" cy="84" r="9" fill="none" stroke="#FF4FC3" stroke-width="2" stroke-dasharray="3 3"/>
+  <g stroke="#FF4FC3" stroke-width="3" stroke-linecap="round">
+    <path d="M200 40 L200 28"/><path d="M200 72 L200 84"/><path d="M184 56 L172 56"/><path d="M216 56 L228 56"/>
+    <path d="M189 45 L181 37"/><path d="M211 67 L219 75"/><path d="M211 45 L219 37"/><path d="M189 67 L181 75"/>
+  </g>
+  <circle cx="200" cy="56" r="10" fill="#FF4FC3"/>
+  <text x="44" y="150" text-anchor="middle" fill="#FF4FC3" font-size="12" font-weight="800">OK</text>
+  <text x="44" y="166" text-anchor="middle" fill="#A8B4D0" font-size="10">= BOMB</text>
+</svg>

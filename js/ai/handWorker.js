@@ -1,12 +1,13 @@
-import { createLandmarker } from "./landmarker.js";
+import { createLandmarker, confidenceOptions, packResult } from "./landmarker.js";
 
 // GPU is not always faster: weak integrated GPUs can lose to the CPU.
-// After a warm-up, if GPU is slow, time the CPU on live frames and keep the faster one.
+// After a warm-up, if GPU is slow, time the other delegate on live frames and keep the faster one.
 const SAMPLE_FRAMES = 30;
 const SLOW_MS = 45;
 
 let landmarker = null;
 let delegate = "";
+let sensitivity = 0.5;
 let phase = "measure-first";
 let candidate = null;
 let times = [];
@@ -18,7 +19,7 @@ async function tryOtherDelegate() {
   phase = "switching";
   try {
     const other = delegate === "GPU" ? "CPU" : "GPU";
-    candidate = await createLandmarker(true, [other]);
+    candidate = await createLandmarker(true, [other], sensitivity);
     times = [];
     phase = "measure-second";
   } catch {
@@ -52,14 +53,22 @@ function record(ms) {
 self.onmessage = async (e) => {
   const msg = e.data;
   if (msg.type === "init") {
+    sensitivity = msg.sensitivity ?? 0.5;
     try {
-      const r = await createLandmarker(true);
+      const r = await createLandmarker(true, ["GPU", "CPU"], sensitivity);
       landmarker = r.landmarker;
       delegate = r.delegate;
       self.postMessage({ type: "ready", delegate });
     } catch (err) {
       self.postMessage({ type: "error", message: String(err?.message || err) });
     }
+    return;
+  }
+  if (msg.type === "options") {
+    sensitivity = msg.sensitivity;
+    const opts = confidenceOptions(sensitivity);
+    landmarker?.setOptions(opts).catch(() => {});
+    candidate?.landmarker.setOptions(opts).catch(() => {});
     return;
   }
   if (msg.type === "frame") {
@@ -70,12 +79,7 @@ self.onmessage = async (e) => {
       const r = active.detectForVideo(bitmap, ts);
       const inferMs = performance.now() - t0;
       record(inferMs);
-      self.postMessage({
-        type: "result",
-        landmarks: r.landmarks?.[0] ?? null,
-        world: r.worldLandmarks?.[0] ?? null,
-        inferMs,
-      });
+      self.postMessage({ type: "result", ...packResult(r, inferMs) });
     } catch (err) {
       self.postMessage({ type: "error", message: String(err?.message || err) });
     } finally {

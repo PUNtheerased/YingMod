@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" font-family="Orbitron, sans-serif">
+  <rect width="240" height="180" rx="16" fill="#101831"/>
+  <g stroke="#6b3f22" stroke-width="3" stroke-linejoin="round" fill="#f6c7a1">
+    <rect x="98" y="156" width="46" height="34" rx="8"/>
+    <rect x="88" y="100" width="68" height="66" rx="20"/>
+    <rect x="94" y="36" width="17" height="76" rx="8.5" transform="rotate(-14 102 110)"/>
+    <rect x="122" y="36" width="17" height="76" rx="8.5" transform="rotate(12 130 110)"/>
+    <rect x="124" y="108" width="38" height="16" rx="8"/>
+    <rect x="124" y="125" width="34" height="16" rx="8"/>
+    <rect x="80" y="122" width="50" height="18" rx="9" transform="rotate(-6 104 130)"/>
+  </g>
+  <g fill="none" stroke="#42E8A1" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M178 46 A22 22 0 1 1 176 76"/>
+    <path d="M178 36 L178 47 L189 47"/>
+  </g>
+  <text x="200" y="124" text-anchor="middle" fill="#42E8A1" font-size="12" font-weight="800">V</text>
+  <text x="200" y="140" text-anchor="middle" fill="#A8B4D0" font-size="9">= WEAPON</text>
+</svg>

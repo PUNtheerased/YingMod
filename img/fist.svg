@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" font-family="Orbitron, sans-serif">
+  <rect width="240" height="180" rx="16" fill="#101831"/>
+  <g fill="none" stroke="#35E5F2" stroke-width="3" opacity=".85">
+    <path d="M60 150 A70 70 0 0 1 180 150"/>
+    <path d="M46 156 A86 86 0 0 1 194 156" opacity=".45"/>
+  </g>
+  <g stroke="#6b3f22" stroke-width="3" stroke-linejoin="round" fill="#f6c7a1">
+    <rect x="98" y="150" width="46" height="40" rx="8"/>
+    <rect x="88" y="78" width="70" height="80" rx="20"/>
+    <rect x="92" y="78" width="64" height="20" rx="10"/>
+    <rect x="92" y="96" width="64" height="20" rx="10"/>
+    <rect x="92" y="114" width="62" height="20" rx="10"/>
+    <rect x="94" y="132" width="56" height="18" rx="9"/>
+    <rect x="74" y="108" width="54" height="20" rx="10" transform="rotate(-8 100 118)"/>
+  </g>
+  <text x="120" y="40" text-anchor="middle" fill="#35E5F2" font-size="16" font-weight="800">FIST</text>
+  <text x="120" y="60" text-anchor="middle" fill="#A8B4D0" font-size="11">= SHIELD</text>
+</svg>

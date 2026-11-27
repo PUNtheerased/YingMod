@@ -9,149 +9,342 @@
       location.replace("https://" + location.host + location.pathname + location.search + location.hash);
     }
   </script>
-  <title>Space Finger Gun — เกมยิงยานอวกาศด้วยท่ามือ</title>
-  <meta name="description" content="เกม Space Shooter ควบคุมด้วยท่ามือทำปืนผ่านเว็บแคม ใช้ Google MediaPipe Hand Landmarker" />
+  <title>Space Finger Gun — AI Hand Tracking Space Battle</title>
+  <meta name="description" content="เกมยิงยานอวกาศ ควบคุมด้วยท่ามือผ่านเว็บแคม ใช้ Google MediaPipe Hand Landmarker" />
+  <meta name="theme-color" content="#070B1D" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&family=Orbitron:wght@600;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;600;700&family=Orbitron:wght@600;800;900&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <canvas id="game"></canvas>
+  <svg class="sprite-defs" aria-hidden="true">
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4l13 8-13 8z" fill="currentColor"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor"/></symbol>
+    <symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path d="M16 9l5 6M21 9l-5 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2" fill="currentColor"/><path d="M16 10l6-3v10l-6-3z" fill="currentColor"/></symbol>
+    <symbol id="i-camera-off" viewBox="0 0 24 24"><rect x="2" y="6" width="14" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M16 10l6-3v10l-6-3z" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 3l18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><path d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7zm8.6 4.9l1.9 1.5-2 3.4-2.3-.9a8 8 0 01-2.2 1.3l-.4 2.4h-4l-.4-2.4a8 8 0 01-2.2-1.3l-2.3.9-2-3.4 1.9-1.5a8 8 0 010-2.6L1.5 9.3l2-3.4 2.3.9A8 8 0 018 5.5L8.4 3h4l.4 2.4a8 8 0 012.2 1.3l2.3-.9 2 3.4-1.9 1.5a8 8 0 010 2.6z" fill="currentColor"/></symbol>
+    <symbol id="i-trophy" viewBox="0 0 24 24"><path d="M7 3h10v5a5 5 0 01-10 0zM5 4H2v2a4 4 0 004 4M19 4h3v2a4 4 0 01-4 4M10 14h4v3h3v3H7v-3h3z" fill="currentColor" stroke="currentColor" stroke-width="1"/></symbol>
+    <symbol id="i-ship" viewBox="0 0 24 24"><path d="M12 2l3 7 6 5-1 2-5-2-1 3h-4l-1-3-5 2-1-2 6-5z" fill="currentColor"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2"/><path d="M9 9.5a3 3 0 115 2.2c-1 .7-2 1.3-2 2.8" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="12" cy="18" r="1.3" fill="currentColor"/></symbol>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10h-6v-6H9v6H3z" fill="currentColor"/></symbol>
+    <symbol id="i-restart" viewBox="0 0 24 24"><path d="M4 12a8 8 0 108-8H8" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/><path d="M9 1L5 4l4 3" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21s-8-5-8-11a4.5 4.5 0 018-3 4.5 4.5 0 018 3c0 6-8 11-8 11z" fill="currentColor"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 2l8 3v6c0 5-3.5 9-8 11-4.5-2-8-6-8-11V5z" fill="currentColor"/></symbol>
+    <symbol id="i-bomb" viewBox="0 0 24 24"><circle cx="11" cy="14" r="7" fill="currentColor"/><path d="M15 8l3-3M18 2v2M21 5h-2M20 3l-1 1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-bolt" viewBox="0 0 24 24"><path d="M13 2L4 14h7l-1 8 9-12h-7z" fill="currentColor"/></symbol>
+    <symbol id="i-hand" viewBox="0 0 24 24"><path d="M8 13V5a1.5 1.5 0 013 0v6-8a1.5 1.5 0 013 0v8-6a1.5 1.5 0 013 0v9a7 7 0 01-7 7h-1a6 6 0 01-5-3l-3-5a1.5 1.5 0 012.5-1.5L8 13z" fill="currentColor"/></symbol>
+    <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M6 10h1M10 10h1M14 10h1M18 10h0M7 14h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M3 9V3h6M21 9V3h-6M3 15v6h6M21 15v6h-6" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M4 12l5 5L20 6" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 4l-8 8 8 8" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </svg>
+
+  <canvas id="game" aria-label="พื้นที่เล่นเกม"></canvas>
   <video id="webcam" playsinline muted></video>
 
-  <div id="topbar" class="hidden">
-    <div class="top-buttons">
-      <button id="btnPause" class="icon-btn" title="หยุดชั่วคราว (P)">⏸</button>
-      <button id="btnHelp" class="icon-btn" title="วิธีเล่น">?</button>
-      <button id="btnMute" class="icon-btn" title="เปิด/ปิดเสียง (M)">🔊</button>
+  <!-- ===================== HUD ===================== -->
+  <div id="hud" class="hud hidden" aria-live="off">
+    <div class="hud-tl">
+      <div class="hud-score"><span class="lbl">SCORE</span><b id="hudScore">0</b></div>
+      <div class="hud-row"><span class="lbl">HIGH</span><b id="hudHigh">0</b></div>
+      <div class="hud-row"><span class="lbl">LEVEL</span><b id="hudLevel">1</b><span class="lbl">TIME</span><b id="hudTime">0:00</b></div>
+      <div id="hudCombo" class="hud-combo hidden">COMBO <b>x0</b> <span></span></div>
     </div>
-    <canvas id="preview" width="320" height="240"></canvas>
-  </div>
 
-  <div id="hint" class="hidden">
-    <img src="img/move.svg" alt="" />
-    <span>ขยับมือ ซ้าย–ขวา</span>
-    <img src="img/fire.svg" alt="" />
-    <span>กดนิ้วโป้งลง = ยิง</span>
-  </div>
-
-  <!-- Main menu -->
-  <section id="menu" class="overlay">
-    <div class="panel menu-panel">
-      <h1 class="title">SPACE<span>FINGER GUN</span></h1>
-      <p class="subtitle">เกมยิงยานอวกาศ ควบคุมด้วย “ท่ามือทำปืน” ผ่านกล้องเว็บแคม</p>
-      <img class="menu-art" src="img/fire.svg" alt="ท่ามือทำปืน กดนิ้วโป้งลงเพื่อยิง" />
-      <div class="buttons">
-        <button id="menuStart" class="btn primary">▶ เริ่มเกม</button>
-        <button id="menuHowto" class="btn">📖 วิธีเล่น</button>
+    <div class="hud-tc">
+      <div id="bossBar" class="boss-bar hidden" role="progressbar" aria-label="Boss HP" aria-valuemin="0" aria-valuemax="100">
+        <div class="boss-name" id="bossName">BOSS</div>
+        <div class="boss-track"><div class="boss-fill" id="bossFill"></div></div>
       </div>
-      <p id="status" class="status">⏳ กำลังโหลดโมเดล Hand Landmarker...</p>
-      <p class="high">คะแนนสูงสุด: <b id="menuHigh">0</b></p>
-      <p class="credit">Hand tracking โดย Google MediaPipe Tasks Vision (Hand Landmarker) · รันออนไลน์ในเบราว์เซอร์</p>
+      <div id="gestureGuide" class="gesture-guide">
+        <span><b>GUN</b> ยิง</span><span><b>FIST</b> โล่</span><span><b>V</b> อาวุธ</span><span><b>OK</b> ระเบิด</span><span><b>OPEN</b> หยุด</span>
+      </div>
+    </div>
+
+    <div class="hud-tr">
+      <div class="hud-top-buttons">
+        <button id="hudMute" class="icon-btn" aria-label="เปิด/ปิดเสียง (M)" title="เปิด/ปิดเสียง (M)"><svg><use href="#i-sound"/></svg></button>
+        <button id="hudPause" class="icon-btn pause-btn" aria-label="หยุดเกม (P / Esc)" title="หยุดเกม (P / Esc)"><svg><use href="#i-pause"/></svg></button>
+      </div>
+      <div class="hud-hp" id="hudHp" aria-label="HP"></div>
+      <div class="hud-chip" id="hudWeapon"><span class="lbl">WEAPON</span><b>NORMAL</b></div>
+      <div class="hud-chips">
+        <div class="hud-chip small" id="hudShield"><svg><use href="#i-shield"/></svg><b>READY</b></div>
+        <div class="hud-chip small" id="hudBombs"><svg><use href="#i-bomb"/></svg><b>x2</b></div>
+      </div>
+      <div class="hud-powers" id="hudPowers"></div>
+    </div>
+
+    <div class="hud-bottom">
+      <div class="hud-status" id="hudHand"><i class="dot"></i><span>HAND</span><b>-</b></div>
+      <div class="hud-status" id="hudGesture"><i class="dot"></i><span>GESTURE</span><b>-</b></div>
+      <div class="hud-status" id="hudCam"><i class="dot"></i><span>CAMERA</span><b>OFF</b></div>
+    </div>
+
+    <div id="handLost" class="hand-lost hidden" role="status">
+      <svg><use href="#i-hand"/></svg>
+      <b>HAND NOT DETECTED</b>
+      <span>ยกมือขึ้นหน้ากล้อง แล้วทำท่าปืน</span>
+    </div>
+
+  </div>
+
+  <!-- Camera panel (visible in game + menu when camera on) -->
+  <div id="camPanel" class="cam-panel hidden">
+    <div class="cam-view">
+      <canvas id="preview" width="320" height="240" aria-label="ภาพจากกล้องพร้อมจุดมือ"></canvas>
+      <div class="cam-msg" id="camMsg">CAMERA OFF</div>
+    </div>
+    <div class="cam-info">
+      <span id="camGesture">-</span>
+      <span id="camConf"></span>
+    </div>
+    <div class="cam-tools">
+      <button id="camToggle" class="icon-btn small" aria-label="เปิด/ปิดกล้อง" title="เปิด/ปิดกล้อง"><svg><use href="#i-camera"/></svg></button>
+      <button id="camLandmarks" class="icon-btn small" aria-label="แสดง/ซ่อนจุดมือ" title="แสดง/ซ่อนจุดมือ"><svg><use href="#i-eye"/></svg></button>
+    </div>
+  </div>
+
+  <!-- ===================== MAIN MENU ===================== -->
+  <section id="menu" class="screen" aria-labelledby="menuTitle">
+    <div class="menu-layout">
+      <div class="menu-left">
+        <h1 id="menuTitle" class="logo"><span class="logo-a">SPACE</span><span class="logo-b">FINGER GUN</span></h1>
+        <p class="tagline">AI HAND TRACKING SPACE BATTLE</p>
+        <nav class="menu-buttons">
+          <button class="btn primary big" data-action="start"><svg><use href="#i-play"/></svg>START GAME</button>
+          <button class="btn" data-action="ships"><svg><use href="#i-ship"/></svg>SELECT SHIP</button>
+          <button class="btn" data-action="howto"><svg><use href="#i-help"/></svg>HOW TO PLAY</button>
+          <button class="btn" data-action="settings"><svg><use href="#i-gear"/></svg>SETTINGS</button>
+          <button class="btn" data-action="leaderboard"><svg><use href="#i-trophy"/></svg>LEADERBOARD</button>
+        </nav>
+      </div>
+      <div class="menu-right">
+        <canvas id="menuShip" width="360" height="360" aria-hidden="true"></canvas>
+        <div class="menu-ship-name" id="menuShipName">FALCON</div>
+        <div class="menu-stats">
+          <div><span class="lbl">HIGH SCORE</span><b id="menuHigh">0</b></div>
+          <div><span class="lbl">BEST LEVEL</span><b id="menuLevel">1</b></div>
+        </div>
+        <div class="ai-status" id="aiStatus" role="status">
+          <div class="ai-row"><i class="dot"></i><span class="lbl">AI MODEL</span><b id="aiModel">LOADING</b></div>
+          <div class="ai-row"><i class="dot"></i><span class="lbl">CAMERA</span><b id="aiCamera">OFF</b></div>
+          <p class="ai-msg thai" id="aiMsg">กำลังโหลดโมเดล MediaPipe Hand Landmarker...</p>
+          <button class="btn small" id="menuCamera"><svg><use href="#i-camera"/></svg>TURN ON CAMERA</button>
+        </div>
+      </div>
+    </div>
+    <p class="credit">Hand tracking: Google MediaPipe Tasks Vision · Keyboard: A/D or ← → move, Space fire, Q weapon, C shield, B bomb, P pause</p>
+  </section>
+
+  <!-- ===================== SHIP SELECT ===================== -->
+  <section id="ships" class="screen hidden" aria-labelledby="shipsTitle">
+    <div class="panel wide scroll">
+      <h2 id="shipsTitle" class="screen-title">SELECT SHIP</h2>
+      <div class="ship-layout">
+        <div class="ship-preview">
+          <canvas id="shipBig" width="420" height="420" aria-hidden="true"></canvas>
+          <div class="ship-meta">
+            <h3 id="shipName">FALCON</h3>
+            <p class="ship-role" id="shipRole">ALL-ROUNDER</p>
+            <div class="stat"><span>SPEED</span><div class="bar"><i id="statSpeed"></i></div></div>
+            <div class="stat"><span>ATTACK</span><div class="bar"><i id="statAttack"></i></div></div>
+            <div class="stat"><span>DEFENSE</span><div class="bar"><i id="statDefense"></i></div></div>
+            <p class="ship-ability"><b id="shipAbility">Overdrive</b><span class="thai" id="shipAbilityTh"></span></p>
+            <p class="ship-numbers thai" id="shipNumbers"></p>
+          </div>
+        </div>
+        <div class="ship-grid" id="shipGrid" role="radiogroup" aria-label="เลือกยาน"></div>
+      </div>
+      <div class="row-buttons">
+        <button class="btn" data-action="back"><svg><use href="#i-back"/></svg>BACK</button>
+        <button class="btn primary" id="shipConfirm"><svg><use href="#i-check"/></svg>CONFIRM</button>
+      </div>
     </div>
   </section>
 
-  <!-- How to play -->
-  <section id="howto" class="overlay hidden">
-    <div class="panel howto-panel">
-      <h2>📖 วิธีเล่น</h2>
+  <!-- ===================== HOW TO PLAY ===================== -->
+  <section id="howto" class="screen hidden" aria-labelledby="howtoTitle">
+    <div class="panel wide scroll">
+      <h2 id="howtoTitle" class="screen-title">HOW TO PLAY</h2>
+      <p class="screen-sub thai">นั่งห่างกล้อง 50–80 ซม. ในที่มีแสงพอ ยกมือ 1 ข้างหันฝ่ามือเข้ากล้อง แล้วใช้ท่ามือเหล่านี้</p>
       <div class="cards">
-        <article class="card">
-          <img src="img/ready.svg" alt="นั่งห่างกล้อง 50-80 ซม." />
-          <h3>1. เตรียมตัว</h3>
-          <p>นั่งห่างกล้อง <b>50–80 ซม.</b> ในที่มีแสงสว่างพอ แล้วยกมือขึ้น 1 ข้าง หันฝ่ามือเข้าหากล้อง</p>
-        </article>
-        <article class="card">
-          <img src="img/gun-pose.svg" alt="ท่ามือทำปืน" />
-          <h3>2. ทำท่าปืน 👉</h3>
-          <p><b>ชูนิ้วชี้ขึ้น</b> และ <b>ตั้งนิ้วโป้งขึ้น</b> นิ้วที่เหลือกำไว้ เหมือนทำมือเป็นปืน</p>
-        </article>
-        <article class="card">
-          <img src="img/move.svg" alt="เลื่อนมือซ้ายขวา ยานเคลื่อนตาม" />
-          <h3>3. บังคับยาน</h3>
-          <p>เลื่อนมือไป<b>ทางซ้าย</b> ยานไปซ้าย เลื่อนไป<b>ทางขวา</b> ยานไปขวา ไม่ต้องยื่นมือจนสุดขอบกล้อง</p>
-        </article>
-        <article class="card">
-          <img src="img/fire.svg" alt="กดนิ้วโป้งลงเพื่อยิง" />
-          <h3>4. ยิง! 💥</h3>
-          <p><b>กดนิ้วโป้งลง</b>แตะนิ้วชี้ = ยิง 1 นัด แล้วยกนิ้วโป้งขึ้นเพื่อยิงนัดต่อไป ถ้ากดค้างไว้จะยิงต่อเนื่องช้า ๆ</p>
-        </article>
-        <article class="card">
-          <img src="img/goal.svg" alt="หลบศัตรู เก็บไอเทม มี 3 ชีวิต" />
-          <h3>5. เป้าหมาย</h3>
-          <p>ยิงศัตรูเก็บคะแนน หลบศัตรูและกระสุน เก็บไอเทม <b>S</b> เพื่อยิงกระจาย 3 ทาง มีทั้งหมด <b>3 ชีวิต</b></p>
-        </article>
-        <article class="card">
-          <img src="img/keyboard.svg" alt="ปุ่มคีย์บอร์ดและเมาส์" />
-          <h3>6. ไม่มีกล้อง?</h3>
-          <p>ใช้ <b>A/D</b> หรือ <b>← →</b> เพื่อขยับ และ <b>Space</b> เพื่อยิง หรือใช้เมาส์ขยับและคลิกยิง</p>
-        </article>
+        <article class="card"><img src="img/gun-pose.svg" alt="ท่าปืน ชูนิ้วชี้ ตั้งนิ้วโป้ง" /><h3>FINGER GUN</h3><p class="thai">ชูนิ้วชี้ ตั้งนิ้วโป้งขึ้น นิ้วอื่นกำไว้ = ท่าพร้อมยิง</p></article>
+        <article class="card"><img src="img/fire.svg" alt="กดนิ้วโป้งลงเพื่อยิง" /><h3>FIRE</h3><p class="thai">กดนิ้วโป้งลงแตะนิ้วชี้ = ยิง กดค้าง = ยิงต่อเนื่อง ยกขึ้น = หยุด</p></article>
+        <article class="card"><img src="img/move.svg" alt="เลื่อนมือซ้ายขวา" /><h3>MOVE</h3><p class="thai">เลื่อนมือซ้าย–ขวา ยานเคลื่อนตาม (ใช้ตำแหน่งกลางฝ่ามือ)</p></article>
+        <article class="card"><img src="img/fist.svg" alt="กำมือ เปิดโล่" /><h3>FIST = SHIELD</h3><p class="thai">กำมือทุกนิ้ว เปิดโล่ 3 วินาที แล้วต้องรอชาร์จ</p></article>
+        <article class="card"><img src="img/vsign.svg" alt="ชูสองนิ้ว เปลี่ยนอาวุธ" /><h3>V SIGN = WEAPON</h3><p class="thai">ชูนิ้วชี้กับนิ้วกลาง สลับอาวุธ NORMAL / LASER / MULTI (ไม่ยิง)</p></article>
+        <article class="card"><img src="img/ok.svg" alt="ท่า OK ระเบิด" /><h3>OK = BOMB</h3><p class="thai">ปลายนิ้วโป้งแตะปลายนิ้วชี้ นิ้วอื่นเหยียด ทิ้งระเบิดเคลียร์จอ (มีจำนวนจำกัด)</p></article>
+        <article class="card"><img src="img/palm.svg" alt="แบมือค้าง หยุดเกม" /><h3>OPEN PALM = PAUSE</h3><p class="thai">แบมือค้าง 0.8 วินาที = หยุดเกม · ทำท่าปืนค้าง 1 วินาที = เล่นต่อ</p></article>
+        <article class="card"><img src="img/keyboard.svg" alt="คีย์บอร์ดและเมาส์" /><h3>KEYBOARD / MOUSE</h3><p class="thai">A/D หรือ ← → ขยับ · Space ยิง · Q อาวุธ · C โล่ · B ระเบิด · P หยุด · เมาส์ลากและคลิกยิง</p></article>
       </div>
 
+      <h3 class="section-title">POWER-UPS</h3>
+      <div class="powerups">
+        <div><i class="pu" style="--c:#42E8A1">S</i><span class="thai">ยิง 3 ทาง 10 วิ</span></div>
+        <div><i class="pu" style="--c:#FF5364">H</i><span class="thai">+1 HP</span></div>
+        <div><i class="pu" style="--c:#35E5F2">B</i><span class="thai">โล่ 5 วิ</span></div>
+        <div><i class="pu" style="--c:#FFD166">F</i><span class="thai">ยิงรัว 8 วิ</span></div>
+        <div><i class="pu" style="--c:#FF4FC3">X</i><span class="thai">ระเบิด +1</span></div>
+      </div>
+
+      <h3 class="section-title">LIVE GESTURE LAB</h3>
       <div class="live">
         <div class="live-left">
-          <canvas id="livePreview" width="320" height="240"></canvas>
-          <button id="btnCamera" class="btn">📷 เปิดกล้องเพื่อลองท่ามือ</button>
+          <canvas id="livePreview" width="320" height="240" aria-label="ภาพทดสอบท่ามือ"></canvas>
+          <button id="labCamera" class="btn small"><svg><use href="#i-camera"/></svg>TURN ON CAMERA</button>
         </div>
         <div class="live-right">
-          <h3>ลองท่ามือก่อนเล่น</h3>
-          <ul class="lamps">
-            <li id="lampHand">✋ เจอมือ</li>
-            <li id="lampGun">👉 ท่าปืนถูกต้อง</li>
-            <li id="lampFire">💥 ยิง!</li>
+          <ul class="lamps" id="labLamps">
+            <li data-g="HAND"><i class="dot"></i>HAND DETECTED<b></b></li>
+            <li data-g="FINGER_GUN"><i class="dot"></i>FINGER GUN<b></b></li>
+            <li data-g="FIRE"><i class="dot"></i>FIRE (thumb down)<b></b></li>
+            <li data-g="FIST"><i class="dot"></i>FIST → SHIELD<b></b></li>
+            <li data-g="V_SIGN"><i class="dot"></i>V SIGN → WEAPON<b></b></li>
+            <li data-g="OK_PINCH"><i class="dot"></i>OK → BOMB<b></b></li>
+            <li data-g="OPEN_PALM"><i class="dot"></i>OPEN PALM → PAUSE<b></b></li>
           </ul>
           <div class="meter">
-            <div class="meter-label"><span>นิ้วโป้งลง</span><span>นิ้วโป้งขึ้น</span></div>
+            <div class="meter-label thai"><span>นิ้วโป้งลง (ยิง)</span><span>นิ้วโป้งขึ้น</span></div>
             <div class="meter-bar">
               <div id="meterDown" class="mark down" title="จุดยิง"></div>
               <div id="meterUp" class="mark up" title="จุดง้าง"></div>
               <div id="meterVal" class="needle"></div>
             </div>
           </div>
-          <div class="track">
-            <div class="track-label">ตำแหน่งยาน (เลื่อนมือซ้าย–ขวา)</div>
-            <div class="track-bar"><div id="trackShip" class="track-ship">▲</div></div>
+          <p class="lab-log thai" id="labLog">ทำท่าต่าง ๆ แล้วดูว่าไฟติดถูกท่าหรือไม่</p>
+          <div class="row-buttons left">
+            <button id="btnCalibrate" class="btn small">CALIBRATE THUMB</button>
+            <button id="btnAutoCalib" class="btn small">AUTO</button>
           </div>
-          <p class="shots">ยิงไปแล้ว: <b id="shotCount">0</b> นัด</p>
-          <button id="btnCalibrate" class="btn small">🎯 ปรับเทียบนิ้วโป้ง</button>
-          <button id="btnAutoCalib" class="btn small">🔄 กลับเป็นอัตโนมัติ</button>
-          <p id="calibMsg" class="calib-msg">ปกติเกมจะปรับจุดยิงตามมือคุณเองอัตโนมัติ ถ้ายังยิงยากหรือยิงเอง ลองกดปรับเทียบ</p>
+          <p id="calibMsg" class="calib-msg thai">ปกติเกมปรับจุดยิงตามมือคุณอัตโนมัติ ถ้ายิงยากหรือยิงเอง ลองกด CALIBRATE</p>
         </div>
       </div>
 
-      <div class="buttons">
-        <button id="howtoStart" class="btn primary">▶ เริ่มเกม</button>
-        <button id="howtoBack" class="btn">กลับ</button>
+      <div class="row-buttons">
+        <button class="btn" data-action="back"><svg><use href="#i-back"/></svg>BACK</button>
+        <button class="btn primary" data-action="start"><svg><use href="#i-play"/></svg>START GAME</button>
       </div>
     </div>
   </section>
 
-  <!-- Pause -->
-  <section id="pause" class="overlay hidden">
-    <div class="panel small-panel">
-      <h2>⏸ หยุดชั่วคราว</h2>
-      <div class="buttons column">
-        <button id="pauseResume" class="btn primary">▶ เล่นต่อ</button>
-        <button id="pauseHowto" class="btn">📖 วิธีเล่น</button>
-        <button id="pauseMenu" class="btn">🏠 เมนูหลัก</button>
+  <!-- ===================== SETTINGS ===================== -->
+  <section id="settings" class="screen hidden" aria-labelledby="settingsTitle">
+    <div class="panel wide scroll">
+      <h2 id="settingsTitle" class="screen-title">SETTINGS</h2>
+      <div class="settings-grid">
+        <fieldset>
+          <legend>AUDIO</legend>
+          <label>MASTER VOLUME <input type="range" min="0" max="1" step="0.05" data-setting="audio.master" /></label>
+          <label>MUSIC VOLUME <input type="range" min="0" max="1" step="0.05" data-setting="audio.music" /></label>
+          <label>SFX VOLUME <input type="range" min="0" max="1" step="0.05" data-setting="audio.sfx" /></label>
+          <label class="check"><input type="checkbox" data-setting="audio.muted" /> MUTE ALL</label>
+        </fieldset>
+        <fieldset>
+          <legend>GAMEPLAY</legend>
+          <label>DIFFICULTY
+            <select data-setting="gameplay.difficulty">
+              <option value="easy">EASY</option>
+              <option value="normal">NORMAL</option>
+              <option value="hard">HARD</option>
+            </select>
+          </label>
+          <label>CONTROL SENSITIVITY <input type="range" min="0.6" max="1.8" step="0.1" data-setting="gameplay.sensitivity" /></label>
+          <label class="check"><input type="checkbox" data-setting="gameplay.autoFire" /> AUTO FIRE</label>
+          <label class="check"><input type="checkbox" data-setting="gameplay.damageFx" /> DAMAGE EFFECTS</label>
+          <label class="check"><input type="checkbox" data-setting="gameplay.screenShake" /> SCREEN SHAKE</label>
+        </fieldset>
+        <fieldset>
+          <legend>AI CAMERA</legend>
+          <label class="check"><input type="checkbox" data-setting="ai.cameraEnabled" /> ENABLE CAMERA</label>
+          <label>TRACKING SENSITIVITY <input type="range" min="0" max="1" step="0.1" data-setting="ai.trackingSensitivity" /></label>
+          <label>GESTURE COOLDOWN <input type="range" min="0.5" max="2" step="0.1" data-setting="ai.gestureCooldown" /></label>
+          <label class="check"><input type="checkbox" data-setting="ai.showGuide" /> SHOW GESTURE GUIDE</label>
+          <label class="check"><input type="checkbox" data-setting="ai.showLandmarks" /> SHOW HAND LANDMARKS</label>
+          <label class="check"><input type="checkbox" data-setting="ai.mirror" /> MIRROR CAMERA</label>
+        </fieldset>
+        <fieldset>
+          <legend>DISPLAY</legend>
+          <label>GRAPHICS QUALITY
+            <select data-setting="display.quality">
+              <option value="high">HIGH</option>
+              <option value="low">LOW (faster)</option>
+            </select>
+          </label>
+          <label class="check"><input type="checkbox" data-setting="display.reduceMotion" /> REDUCE MOTION</label>
+          <button class="btn small" id="btnFullscreen" type="button"><svg><use href="#i-expand"/></svg>TOGGLE FULLSCREEN</button>
+        </fieldset>
+      </div>
+      <p class="screen-sub thai">การตั้งค่าบันทึกอัตโนมัติในเบราว์เซอร์นี้ (ระดับความยากมีผลกับเกมถัดไป)</p>
+      <div class="row-buttons">
+        <button class="btn" id="settingsReset" type="button"><svg><use href="#i-restart"/></svg>RESET DEFAULTS</button>
+        <button class="btn primary" data-action="back"><svg><use href="#i-back"/></svg>BACK</button>
       </div>
     </div>
   </section>
 
-  <!-- Game over -->
-  <section id="gameover" class="overlay hidden">
-    <div class="panel small-panel">
-      <h2 class="go-title">GAME OVER</h2>
-      <p class="go-score">คะแนน <b id="goScore">0</b></p>
-      <p class="go-high">คะแนนสูงสุด <b id="goHigh">0</b></p>
-      <p id="goNew" class="go-new hidden">🏆 สถิติใหม่!</p>
-      <div class="buttons column">
-        <button id="goRetry" class="btn primary">🔁 เล่นอีกครั้ง</button>
-        <button id="goMenu" class="btn">🏠 เมนูหลัก</button>
+  <!-- ===================== LEADERBOARD ===================== -->
+  <section id="leaderboard" class="screen hidden" aria-labelledby="lbTitle">
+    <div class="panel">
+      <h2 id="lbTitle" class="screen-title">LEADERBOARD</h2>
+      <p class="screen-sub thai">สถิติ 10 อันดับแรกในเครื่องนี้</p>
+      <table class="board">
+        <thead><tr><th>#</th><th>NAME</th><th>SCORE</th><th>LV</th><th>SHIP</th></tr></thead>
+        <tbody id="boardBody"></tbody>
+      </table>
+      <div class="row-buttons">
+        <button class="btn" id="boardClear" type="button"><svg><use href="#i-x"/></svg>CLEAR</button>
+        <button class="btn primary" data-action="back"><svg><use href="#i-back"/></svg>BACK</button>
       </div>
     </div>
   </section>
+
+  <!-- ===================== PAUSE ===================== -->
+  <section id="pause" class="screen dim hidden" aria-labelledby="pauseTitle">
+    <div class="panel narrow">
+      <h2 id="pauseTitle" class="screen-title">PAUSED</h2>
+      <div class="resume-gesture">
+        <p class="thai">ทำท่าปืนค้าง 1 วินาที เพื่อเล่นต่อ</p>
+        <div class="resume-bar"><i id="resumeFill"></i></div>
+      </div>
+      <div class="col-buttons">
+        <button class="btn primary" data-action="resume"><svg><use href="#i-play"/></svg>RESUME</button>
+        <button class="btn" data-action="restart"><svg><use href="#i-restart"/></svg>RESTART</button>
+        <button class="btn" data-action="settings"><svg><use href="#i-gear"/></svg>SETTINGS</button>
+        <button class="btn" data-action="menu"><svg><use href="#i-home"/></svg>MAIN MENU</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== GAME OVER / VICTORY ===================== -->
+  <section id="end" class="screen dim hidden" aria-labelledby="endTitle">
+    <div class="panel narrow">
+      <h2 id="endTitle" class="screen-title end-title">GAME OVER</h2>
+      <p id="endNew" class="end-new hidden">NEW HIGH SCORE</p>
+      <div class="end-stats">
+        <div><span class="lbl">SCORE</span><b id="endScore">0</b></div>
+        <div><span class="lbl">HIGH SCORE</span><b id="endHigh">0</b></div>
+        <div><span class="lbl">LEVEL REACHED</span><b id="endLevel">1</b></div>
+        <div><span class="lbl">ENEMIES DESTROYED</span><b id="endKills">0</b></div>
+        <div><span class="lbl">BOSSES DEFEATED</span><b id="endBosses">0</b></div>
+        <div><span class="lbl">ACCURACY</span><b id="endAcc">0%</b></div>
+        <div><span class="lbl">MAX COMBO</span><b id="endCombo">0</b></div>
+        <div><span class="lbl">TIME</span><b id="endTime">0:00</b></div>
+      </div>
+      <label class="name-entry" id="nameEntry">NAME <input id="endName" maxlength="16" autocomplete="off" /></label>
+      <div class="col-buttons">
+        <button class="btn primary" data-action="restart"><svg><use href="#i-restart"/></svg>PLAY AGAIN</button>
+        <button class="btn" data-action="menu"><svg><use href="#i-home"/></svg>MAIN MENU</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="loading" class="loading-bar" aria-hidden="true"><i></i></div>
 
   <script type="module" src="js/main.js"></script>
 </body>
