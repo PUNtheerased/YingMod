@@ -111,6 +111,19 @@ export class HandTracker extends Emitter {
     this.busy = false;
     if (msg.type === "result") this.setResult(msg);
     else if (msg.type === "error") console.error("hand worker:", msg.message);
+    // Send the next frame right away instead of waiting up to one display frame for pump().
+    if (this.ready && this.cameraOn) this.sendFrame();
+  }
+
+  sendFrame() {
+    const v = this.video;
+    if (this.busy || v.readyState < 2 || v.currentTime === this.lastVideoTime) return false;
+    this.lastVideoTime = v.currentTime;
+    this.busy = true;
+    createImageBitmap(v)
+      .then((bitmap) => this.worker.postMessage({ type: "frame", bitmap, ts: performance.now() }, [bitmap]))
+      .catch(() => (this.busy = false));
+    return true;
   }
 
   setResult(result) {
@@ -201,18 +214,12 @@ export class HandTracker extends Emitter {
   pump(now) {
     if (!this.ready || !this.cameraOn) return null;
     const v = this.video;
-    if (!this.busy && v.readyState >= 2 && v.currentTime !== this.lastVideoTime) {
+    if (this.worker) this.sendFrame();
+    else if (v.readyState >= 2 && v.currentTime !== this.lastVideoTime) {
       this.lastVideoTime = v.currentTime;
-      if (this.worker) {
-        this.busy = true;
-        createImageBitmap(v)
-          .then((bitmap) => this.worker.postMessage({ type: "frame", bitmap, ts: performance.now() }, [bitmap]))
-          .catch(() => (this.busy = false));
-      } else {
-        const t0 = performance.now();
-        const r = this.landmarker.detectForVideo(v, now);
-        this.setResult(packResult(r, performance.now() - t0));
-      }
+      const t0 = performance.now();
+      const r = this.landmarker.detectForVideo(v, now);
+      this.setResult(packResult(r, performance.now() - t0));
     }
     const out = this.pending;
     this.pending = null;

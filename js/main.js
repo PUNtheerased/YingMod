@@ -7,6 +7,7 @@ import { SHIPS, COLORS } from "./game/defs.js";
 import { HandTracker } from "./ai/handTracker.js";
 import { GestureRecognizer, GESTURE_INFO } from "./ai/gestures.js";
 import { Controls } from "./ai/controls.js";
+import { TrackingQuality } from "./ai/quality.js";
 import { ScreenManager, ShipSelect, renderLeaderboard, renderEnd } from "./ui/screens.js";
 import { Hud } from "./ui/hud.js";
 import { SettingsView } from "./ui/settingsView.js";
@@ -40,6 +41,7 @@ class App {
     this.engine = new GameEngine();
     this.tracker = new HandTracker($("webcam"));
     this.rec = new GestureRecognizer();
+    this.quality = new TrackingQuality();
     this.controls = new Controls($("game"));
     this.screens = new ScreenManager();
     this.hud = new Hud();
@@ -461,6 +463,10 @@ class App {
       $("resumeFill").style.width = `${(p * 100).toFixed(0)}%`;
     }
     this.drawPreviews(cur, now);
+    const hint = this.quality.update(this.tracker, this.rec, now);
+    setText($("camHint"), hint ?? "");
+    toggle($("camHint"), "hidden", !hint);
+    if (cur === "howto") this.lab.updateStatus(this.tracker, hint);
     if (cur === "menu") drawShipPreview($("menuShip"), this.records.shipId ?? "falcon", this.t, true);
     else if (cur === "ships") this.ships.draw(this.t);
     else if (cur === "howto") this.lab.update(dt);

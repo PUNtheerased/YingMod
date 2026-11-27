@@ -104,6 +104,7 @@
       <span id="camGesture">-</span>
       <span id="camConf"></span>
     </div>
+    <p class="cam-hint thai hidden" id="camHint" role="status"></p>
     <div class="cam-tools">
       <button id="camToggle" class="icon-btn small" aria-label="เปิด/ปิดกล้อง" title="เปิด/ปิดกล้อง"><svg><use href="#i-camera"/></svg></button>
       <button id="camLandmarks" class="icon-btn small" aria-label="แสดง/ซ่อนจุดมือ" title="แสดง/ซ่อนจุดมือ"><svg><use href="#i-eye"/></svg></button>
@@ -196,8 +197,17 @@
       <h3 class="section-title">LIVE GESTURE LAB</h3>
       <div class="live">
         <div class="live-left">
-          <canvas id="livePreview" width="320" height="240" aria-label="ภาพทดสอบท่ามือ"></canvas>
+          <div class="live-view">
+            <canvas id="livePreview" width="320" height="240" aria-label="ภาพทดสอบท่ามือ"></canvas>
+            <div class="train-overlay hidden" id="trainOverlay" role="status" aria-live="polite">
+              <img id="trainImg" alt="" />
+              <b id="trainStep"></b>
+              <span id="trainCount" class="thai"></span>
+            </div>
+          </div>
           <button id="labCamera" class="btn small"><svg><use href="#i-camera"/></svg>TURN ON CAMERA</button>
+          <p class="lab-stats" id="labStats"></p>
+          <p class="lab-hint thai hidden" id="labHint" role="status"></p>
         </div>
         <div class="live-right">
           <ul class="lamps" id="labLamps">
@@ -218,6 +228,14 @@
             </div>
           </div>
           <p class="lab-log thai" id="labLog">ทำท่าต่าง ๆ แล้วดูว่าไฟติดถูกท่าหรือไม่</p>
+          <p class="lab-why thai" id="labWhy"></p>
+          <div class="train-box">
+            <div class="row-buttons left">
+              <button id="btnTrain" class="btn small primary"><svg><use href="#i-hand"/></svg>TRAIN MY GESTURES</button>
+              <button id="btnTrainReset" class="btn small">RESET TRAINING</button>
+            </div>
+            <p id="trainMsg" class="calib-msg thai">จับท่าผิดบ่อย? กด TRAIN แล้วทำแต่ละท่าค้างไว้ 1.5 วินาที (6 ท่า ประมาณ 30 วินาที) เกมจะจำท่ามือแบบของคุณ</p>
+          </div>
           <div class="row-buttons left">
             <button id="btnCalibrate" class="btn small">CALIBRATE THUMB</button>
             <button id="btnAutoCalib" class="btn small">AUTO</button>

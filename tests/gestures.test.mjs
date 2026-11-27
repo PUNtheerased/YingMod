@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { G, GestureRecognizer, analyzeHand, scoreGestures, classify } from "../js/ai/gestures.js";
+import { G, GestureRecognizer, analyzeHand, scoreGestures, classify, explainGesture } from "../js/ai/gestures.js";
 import { POSES, makeHand } from "./handModel.mjs";
 
 const memStorage = () => {
@@ -208,4 +208,92 @@ test("cooldown blocks rapid re-trigger of the same action", () => {
   assert.equal(count(run(rec, s, POSES.fist, 600), "shield"), 0);
   run(rec, s, POSES.gunUp, 300);
   assert.equal(count(run(rec, s, POSES.fist, 600), "shield"), 1);
+});
+
+test("explainGesture names the finger that blocks the gesture", () => {
+  // Gun with the ring finger still half up: rules reject it, and the hint says why.
+  const f = analyzeHand(makeHand({ curls: [0, 1, 0.35, 1], thumb: "up" }).world);
+  const tips = explainGesture(f, G.FINGER_GUN).map((t) => t.key);
+  assert.equal(tips[0], "ringCurl");
+  assert.deepEqual(explainGesture(analyzeHand(POSES.gunUp().world), G.FINGER_GUN), []);
+});
+
+/** Runs rec.train() while feeding the pose that each step asks for. */
+async function trainWith(rec, s, poseFor) {
+  let current = null;
+  const wait = async (ms) => {
+    if (current !== null) run(rec, s, () => poseFor(current), ms);
+    else s.t += ms;
+  };
+  return rec.train((step, index) => (current = index), { countdown: 1, recordMs: 600, wait });
+}
+
+test("personal training: user's own odd gun pose becomes FINGER_GUN, other gestures stay correct", async () => {
+  // This user's "gun": ring and pinky barely curled - the rules alone don't accept it.
+  let seed = 1;
+  const oddGun = (thumb) => makeHand({ curls: [0, 0.45, 0.3, 0.35], thumb, jitter: 0.002, seed: seed++ });
+  const before = classify(scoreGestures(analyzeHand(oddGun("up").world)), 0.55).label;
+  assert.notEqual(before, G.FINGER_GUN, "precondition: rules alone miss this pose");
+
+  const storage = memStorage();
+  const rec = new GestureRecognizer(storage);
+  const s = { t: 1000 };
+  const poses = [() => oddGun("up"), () => oddGun("down"), POSES.fist, POSES.vsign, POSES.ok, POSES.open];
+  const report = await trainWith(rec, s, (i) => poses[i]());
+  assert.ok(rec.trained);
+  for (const [k, r] of Object.entries(report)) assert.ok(r.accuracy >= 0.8, `${k} accuracy ${r.accuracy}`);
+
+  run(rec, s, () => oddGun("up"), 600);
+  assert.equal(rec.stable, G.FINGER_GUN, `odd gun after training: ${JSON.stringify(rec.scores)}`);
+  for (const [pose, want] of [
+    [POSES.fist, G.FIST],
+    [POSES.vsign, G.V_SIGN],
+    [POSES.ok, G.OK_PINCH],
+    [POSES.open, G.OPEN_PALM],
+    [POSES.gunUp, G.FINGER_GUN],
+  ]) {
+    run(rec, s, pose, 600);
+    assert.equal(rec.stable, want, `${want}: ${JSON.stringify(rec.scores)}`);
+  }
+
+  // Saved and reloaded from storage.
+  const again = new GestureRecognizer(storage);
+  assert.ok(again.trained);
+  again.resetTraining();
+  assert.equal(new GestureRecognizer(storage).trained, false);
+});
+
+test("personal training fixes a gun the rules read as V, while a wide V stays V", async () => {
+  // This user's gun keeps index + middle up and slightly apart; their V is much wider.
+  let seed = 100;
+  const gun = (thumb) => makeHand({ curls: [0, 0, 1, 1], thumb, spreads: [-0.1, 0.1], jitter: 0.002, seed: seed++ });
+  const wideV = () => makeHand({ curls: [0, 0, 1, 1], thumb: "tuck", spreads: [-0.45, 0.45], jitter: 0.002, seed: seed++ });
+  assert.equal(classify(scoreGestures(analyzeHand(gun("up").world)), 0.55).label, G.V_SIGN, "precondition");
+
+  const rec = new GestureRecognizer(memStorage());
+  const s = { t: 1000 };
+  const poses = [() => gun("up"), () => gun("down"), POSES.fist, wideV, POSES.ok, POSES.open];
+  await trainWith(rec, s, (i) => poses[i]());
+
+  const ev = run(rec, s, () => gun("up"), 1500);
+  assert.equal(rec.stable, G.FINGER_GUN, JSON.stringify(rec.scores));
+  assert.equal(count(ev, "weapon"), 0);
+  assert.equal(count(run(rec, s, () => gun("down"), 200), "shoot"), 1);
+  run(rec, s, wideV, 800);
+  assert.equal(rec.stable, G.V_SIGN);
+});
+
+test("training emits no gesture actions and keeps the old model when cancelled", async () => {
+  const rec = new GestureRecognizer(memStorage());
+  const s = { t: 1000 };
+  const events = [];
+  let steps = 0;
+  const wait = async (ms) => {
+    events.push(...run(rec, s, POSES.fist, ms));
+    if (++steps > 4) rec.cancelTraining();
+  };
+  await assert.rejects(rec.train(() => {}, { countdown: 1, recordMs: 400, wait }));
+  assert.equal(count(events, "shield"), 0);
+  assert.equal(rec.trained, false);
+  assert.equal(rec.calibrating, false);
 });

@@ -108,7 +108,8 @@ const relaxed = (e) => ramp(e, 0.15, 0.5);
  *  V vs GUN: index+middle tips apart (V) or held together (two-finger gun is common).
  *  OPEN vs OK: thumb-index tips apart or touching.
  */
-export function scoreGestures(f) {
+/** Each gesture's conditions as [part, 0..1]; the gesture score is the weakest part. */
+export function gestureParts(f) {
   const [i, m, r, p] = f.ext;
   const pinchClose = 1 - ramp(f.pinch, 0.28, 0.5);
   const thumbOpen = ramp(f.thumbOut, 0.32, 0.55);
@@ -116,18 +117,183 @@ export function scoreGestures(f) {
   const apart = ramp(f.spread, 0.3, 0.45);
   const midFlat = 1 - ramp(f.midBend ?? 0, 0.3, 0.5);
   return {
-    FIST: Math.min(curled(i), curled(m), curled(r), curled(p)),
-    OPEN_PALM: Math.min(straight(i), straight(m), straight(r), straight(p), thumbOpen, 1 - pinchClose),
-    OK_PINCH: Math.min(pinchClose, relaxed(m), relaxed(r), relaxed(p)),
-    V_SIGN: Math.min(straight(i), straight(m), midFlat, curled(r), curled(p), apart),
-    FINGER_GUN: Math.min(
-      straight(i),
-      curled(r),
-      curled(p),
-      Math.max(curled(m), 1 - midFlat, Math.min(straight(m), 1 - apart)),
-    ),
+    FIST: [["indexCurl", curled(i)], ["middleCurl", curled(m)], ["ringCurl", curled(r)], ["pinkyCurl", curled(p)]],
+    OPEN_PALM: [
+      ["indexUp", straight(i)],
+      ["middleUp", straight(m)],
+      ["ringUp", straight(r)],
+      ["pinkyUp", straight(p)],
+      ["thumbOut", thumbOpen],
+      ["tipsApart", 1 - pinchClose],
+    ],
+    OK_PINCH: [["pinch", pinchClose], ["middleRelaxed", relaxed(m)], ["ringRelaxed", relaxed(r)], ["pinkyRelaxed", relaxed(p)]],
+    V_SIGN: [
+      ["indexUp", straight(i)],
+      ["middleUp", straight(m)],
+      ["middleFlat", midFlat],
+      ["ringCurl", curled(r)],
+      ["pinkyCurl", curled(p)],
+      ["vApart", apart],
+    ],
+    FINGER_GUN: [
+      ["indexUp", straight(i)],
+      ["ringCurl", curled(r)],
+      ["pinkyCurl", curled(p)],
+      ["middleGun", Math.max(curled(m), 1 - midFlat, Math.min(straight(m), 1 - apart))],
+    ],
   };
 }
+
+export function scoreGestures(f) {
+  const out = {};
+  for (const [k, parts] of Object.entries(gestureParts(f))) out[k] = Math.min(...parts.map((x) => x[1]));
+  return out;
+}
+
+export const PART_HINTS = {
+  indexCurl: "งอนิ้วชี้ลง",
+  middleCurl: "กำนิ้วกลาง",
+  ringCurl: "กำนิ้วนางให้สุด",
+  pinkyCurl: "กำนิ้วก้อยให้สุด",
+  indexUp: "เหยียดนิ้วชี้ให้ตรง",
+  middleUp: "เหยียดนิ้วกลางให้ตรง",
+  ringUp: "เหยียดนิ้วนาง",
+  pinkyUp: "เหยียดนิ้วก้อย",
+  thumbOut: "กางนิ้วโป้งออก",
+  tipsApart: "แยกปลายนิ้วโป้งออกจากนิ้วชี้",
+  pinch: "แตะปลายนิ้วโป้งกับปลายนิ้วชี้ให้ชิด",
+  middleRelaxed: "ยกนิ้วกลางขึ้น",
+  ringRelaxed: "ยกนิ้วนางขึ้น",
+  pinkyRelaxed: "ยกนิ้วก้อยขึ้น",
+  middleFlat: "เหยียดนิ้วกลางให้ตรงเท่านิ้วชี้",
+  vApart: "แยกนิ้วชี้กับนิ้วกลางให้ห่างเป็นตัว V",
+  middleGun: "กำนิ้วกลาง หรือชิดนิ้วกลางกับนิ้วชี้",
+};
+
+/** The weakest conditions of `label` for these features, weakest first (only those below `below`). */
+export function explainGesture(f, label, below = 0.6) {
+  const parts = gestureParts(f)[label];
+  if (!parts) return [];
+  return parts
+    .filter(([, v]) => v < below)
+    .sort((a, b) => a[1] - b[1])
+    .map(([key, v]) => ({ key, value: v, hint: PART_HINTS[key] }));
+}
+
+// ---------- Personal training (k-nearest neighbours on the user's own samples) ----------
+
+const TRAIN_KEY = "sfg_gesture_train";
+const TRAIN_VERSION = 1;
+const KNN_K = 3;
+const KNN_WEIGHT = 0.8;
+
+/** Feature vector for nearest-neighbour matching; each dimension is roughly 0..1. */
+export function featureVector(f) {
+  return [
+    ...f.ext,
+    Math.min(f.thumbOut, 1.2) * 0.5,
+    Math.min(f.pinch, 1.5) / 1.5,
+    Math.min(f.spread, 1.2) / 1.2,
+    Math.min(f.midBend ?? 0, 1),
+  ];
+}
+
+const vdist = (a, b) => {
+  let s = 0;
+  for (let k = 0; k < a.length; k++) s += (a[k] - b[k]) ** 2;
+  return Math.sqrt(s);
+};
+
+function knnDistance(samples, v, skip = -1) {
+  const ds = [];
+  for (let n = 0; n < samples.length; n++) if (n !== skip) ds.push(vdist(samples[n], v));
+  ds.sort((a, b) => a - b);
+  const k = Math.min(KNN_K, ds.length);
+  let s = 0;
+  for (let n = 0; n < k; n++) s += ds[n];
+  return k ? s / k : Infinity;
+}
+
+/** The user's recorded samples per gesture; scores a hand by closeness to them. */
+export class TrainedModel {
+  constructor(samples) {
+    this.samples = samples;
+    this.sigma = {};
+    for (const [label, list] of Object.entries(samples)) {
+      // Per-gesture width: how tightly this user's samples cluster.
+      const loo = list.map((v, n) => knnDistance(list, v, n)).sort((a, b) => a - b);
+      this.sigma[label] = clamp((loo[Math.floor(loo.length / 2)] ?? 0.1) * 2.5, 0.15, 0.35);
+    }
+  }
+
+  get labels() {
+    return Object.keys(this.samples);
+  }
+
+  scores(v) {
+    const out = {};
+    for (const [label, list] of Object.entries(this.samples)) {
+      const d = knnDistance(list, v);
+      const s = this.sigma[label];
+      out[label] = Math.exp(-(d * d) / (2 * s * s));
+    }
+    return out;
+  }
+
+  /** Leave-one-out check: which recorded samples would be classified as another gesture. */
+  validate() {
+    const report = {};
+    for (const [label, list] of Object.entries(this.samples)) {
+      let ok = 0;
+      const confused = {};
+      list.forEach((v, n) => {
+        let best = null;
+        let bestD = Infinity;
+        for (const [other, olist] of Object.entries(this.samples)) {
+          const d = knnDistance(olist, v, other === label ? n : -1) / this.sigma[other];
+          if (d < bestD) [best, bestD] = [other, d];
+        }
+        if (best === label) ok++;
+        else confused[best] = (confused[best] || 0) + 1;
+      });
+      report[label] = { accuracy: list.length ? ok / list.length : 0, confused };
+    }
+    return report;
+  }
+
+  toJSON() {
+    return { v: TRAIN_VERSION, samples: this.samples };
+  }
+
+  static fromJSON(data) {
+    if (!data || data.v !== TRAIN_VERSION || !data.samples) return null;
+    const ok = Object.values(data.samples).every((l) => Array.isArray(l) && l.length >= 4 && l.every((v) => v.length === 8));
+    return ok ? new TrainedModel(data.samples) : null;
+  }
+}
+
+/**
+ * Rule scores blended with the personal model. The model only takes over in proportion to
+ * how closely the hand matches something the user recorded; for poses unlike any of their
+ * samples (e.g. a textbook gun they never trained), the built-in rules still decide.
+ */
+export function blendScores(rule, trained) {
+  if (!trained) return rule;
+  const match = Math.max(0, ...Object.values(trained));
+  const w = KNN_WEIGHT * match;
+  const out = {};
+  for (const k of Object.keys(rule)) out[k] = (1 - w) * rule[k] + w * (trained[k] ?? 0);
+  return out;
+}
+
+export const TRAIN_STEPS = [
+  { label: G.FINGER_GUN, th: "ท่าปืน ตั้งนิ้วโป้งขึ้น", img: "img/gun-pose.svg" },
+  { label: G.FINGER_GUN, th: "ท่าปืน กดนิ้วโป้งลง", img: "img/fire.svg" },
+  { label: G.FIST, th: "กำมือ", img: "img/fist.svg" },
+  { label: G.V_SIGN, th: "ชูสองนิ้วเป็นตัว V", img: "img/vsign.svg" },
+  { label: G.OK_PINCH, th: "ท่า OK (ปลายโป้งแตะปลายนิ้วชี้)", img: "img/ok.svg" },
+  { label: G.OPEN_PALM, th: "แบมือ", img: "img/palm.svg" },
+];
 
 export function classify(scores, minConf) {
   let best = G.NONE;
@@ -189,7 +355,10 @@ export class GestureRecognizer {
     this.thresholdUp = 0.42;
     this.openLevel = 0;
     this.dHist = [];
+    this.model = null;
+    this.training = false;
     this.loadCalibration();
+    this.loadTraining();
     this.reset();
   }
 
@@ -209,7 +378,10 @@ export class GestureRecognizer {
     this.conf = 0;
     this.handScore = null;
     this.scores = {};
+    this.ruleScores = {};
+    this.knnScores = null;
     this.features = null;
+    this.featFresh = false;
     this.triggerDown = false;
     this.triggerArmed = false;
     this.gunSeenAt = -1e9;
@@ -241,7 +413,10 @@ export class GestureRecognizer {
 
     const pts = result.world ?? lms;
     this.features = analyzeHand(pts);
-    this.scores = scoreGestures(this.features);
+    this.featFresh = true;
+    this.ruleScores = scoreGestures(this.features);
+    this.knnScores = this.model ? this.model.scores(featureVector(this.features)) : null;
+    this.scores = blendScores(this.ruleScores, this.knnScores);
     // Hysteresis: the gesture already held needs a clearly better rival to be replaced.
     const scores = { ...this.scores };
     if (scores[this.stable] !== undefined) scores[this.stable] = Math.min(1, scores[this.stable] + STICKY);
@@ -320,7 +495,7 @@ export class GestureRecognizer {
     }
     if (this.handPresent) {
       const a = GESTURE_ACTIONS[this.stable];
-      if (a && !this.actionFired && now - this.stableSince >= a.dwell) {
+      if (a && !this.actionFired && !this.calibrating && now - this.stableSince >= a.dwell) {
         // One attempt per entry: if still cooling down the attempt is consumed, so the
         // action can't fire late while the hand is already moving to another gesture.
         this.actionFired = true;
@@ -411,6 +586,72 @@ export class GestureRecognizer {
       return { up: mu, down: md };
     } finally {
       this.calibrating = false;
+    }
+  }
+
+  get trained() {
+    return !!this.model;
+  }
+
+  loadTraining() {
+    try {
+      this.model = TrainedModel.fromJSON(JSON.parse(this.storage?.getItem(TRAIN_KEY)));
+    } catch {
+      this.model = null;
+    }
+  }
+
+  resetTraining() {
+    this.model = null;
+    this.storage?.removeItem(TRAIN_KEY);
+  }
+
+  cancelTraining() {
+    this.trainCancel = true;
+  }
+
+  /**
+   * Records the user's own version of each gesture (TRAIN_STEPS), then matches live hands
+   * against those samples in addition to the built-in rules. The previous training is kept
+   * if anything fails. onStep(step, index, phase, secondsLeft) drives the UI.
+   */
+  async train(onStep, { countdown = 3, recordMs = 1500, wait = sleep } = {}) {
+    const samples = {};
+    this.calibrating = true;
+    this.trainCancel = false;
+    this.training = true;
+    try {
+      for (let s = 0; s < TRAIN_STEPS.length; s++) {
+        const step = TRAIN_STEPS[s];
+        for (let c = countdown; c > 0; c--) {
+          onStep(step, s, "ready", c);
+          await wait(700);
+          if (this.trainCancel) throw new Error("ยกเลิกการฝึกแล้ว ใช้ค่าเดิมต่อ");
+        }
+        onStep(step, s, "record", 0);
+        const got = [];
+        for (let t = 0; t < recordMs; t += 40) {
+          await wait(40);
+          if (this.trainCancel) throw new Error("ยกเลิกการฝึกแล้ว ใช้ค่าเดิมต่อ");
+          if (this.handPresent && this.featFresh && this.features) {
+            got.push(featureVector(this.features));
+            this.featFresh = false;
+          }
+        }
+        if (got.length < 6) throw new Error(`ไม่เจอมือตอนบันทึก "${step.th}" ลองยกมือให้อยู่กลางกล้องแล้วฝึกใหม่`);
+        (samples[step.label] ??= []).push(...got);
+      }
+      for (const [k, list] of Object.entries(samples)) {
+        if (list.length > 60) samples[k] = list.filter((_, n) => n % Math.ceil(list.length / 60) === 0);
+      }
+      const model = new TrainedModel(samples);
+      const report = model.validate();
+      this.model = model;
+      this.storage?.setItem(TRAIN_KEY, JSON.stringify(model.toJSON()));
+      return report;
+    } finally {
+      this.calibrating = false;
+      this.training = false;
     }
   }
 }
