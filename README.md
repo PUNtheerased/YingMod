@@ -43,7 +43,7 @@ npm test           # เทสต์ระบบท่ามือและเ�
 npm run check      # ตรวจ syntax ของไฟล์ JS ทุกไฟล์
 ```
 
-**ขึ้นออนไลน์**: เป็น static site ไม่ต้องมี build command push ขึ้น GitHub Pages (branch `main`, root) แล้วโดเมนจาก `CNAME` (yingmod.puntheerased.com) จะอัปเดตเอง
+**ขึ้นออนไลน์**: เป็น static site ไม่ต้องมี build command push ขึ้น GitHub Pages (branch `main`, root) แล้วโดเมนจาก `CNAME` (yingpewpew.puntheerased.com) จะอัปเดตเอง
 
 ## โครงสร้างไฟล์
 
